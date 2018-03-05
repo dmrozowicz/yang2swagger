@@ -9,7 +9,7 @@
  *      Bartosz Michalik <bartosz.michalik@amartus.com>
  */
 
-package com.mrv.yangtools.codegen.v3;
+package com.mrv.yangtools.codegen.v3.impl;
 
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;

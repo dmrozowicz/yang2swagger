@@ -11,32 +11,41 @@
 
 package com.mrv.yangtools.codegen.v3;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import org.opendaylight.yangtools.yang.model.api.ChoiceSchemaNode;
+import org.opendaylight.yangtools.yang.model.api.ContainerSchemaNode;
+import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
+import org.opendaylight.yangtools.yang.model.api.ListSchemaNode;
+import org.opendaylight.yangtools.yang.model.api.Module;
+import org.opendaylight.yangtools.yang.model.api.ModuleIdentifier;
+import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
+import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.mrv.yangtools.codegen.PathHandler;
-import com.mrv.yangtools.codegen.PathHandlerBuilder;
-import com.mrv.yangtools.codegen.PathSegment;
-import com.mrv.yangtools.codegen.TagGenerator;
 import com.mrv.yangtools.codegen.impl.ModuleUtils;
-import com.mrv.yangtools.codegen.impl.OptimizingDataObjectBuilder;
-import com.mrv.yangtools.codegen.impl.postprocessor.ReplaceEmptyWithParent;
-import com.mrv.yangtools.codegen.impl.postprocessor.SingleParentInheritenceModel;
-import com.mrv.yangtools.codegen.impl.postprocessor.SortDefinitions;
+import com.mrv.yangtools.codegen.v3.impl.AnnotatingTypeConverter;
+import com.mrv.yangtools.codegen.v3.impl.OptimizingDataObjectBuilder;
+import com.mrv.yangtools.codegen.v3.impl.UnpackingDataObjectsBuilder;
+import com.mrv.yangtools.codegen.v3.impl.postprocessor.ReplaceEmptyWithParent;
+import com.mrv.yangtools.codegen.v3.impl.postprocessor.SortDefinitions;
+
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
-
-import org.opendaylight.yangtools.yang.model.api.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.Writer;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * YANG to Swagger generator
@@ -119,12 +128,13 @@ public class OpenAPIGenerator {
         moduleUtils = new ModuleUtils(ctx);
         this.moduleNames = modulesToGenerate.stream().map(ModuleIdentifier::getName).collect(Collectors.toSet());
         //assign default strategy
-        strategy(Strategy.optimizing);
+        //TODO DM default was optimizing
+        strategy(Strategy.unpacking);
 
         //no exposed swagger API
         target.info(new Info());
 
-        pathHandlerBuilder = new com.mrv.yangtools.codegen.rfc8040.PathHandlerBuilder();
+        pathHandlerBuilder = new com.mrv.yangtools.codegen.v3.rfc8040.PathHandlerBuilder();
         //default postprocessors
         postprocessor = new ReplaceEmptyWithParent().andThen(new SortDefinitions());
     }
@@ -285,11 +295,13 @@ public class OpenAPIGenerator {
      * @param target to work on
      */
     protected void postProcessSwagger(OpenAPI target) {
-        if(target.getDefinitions() == null || target.getDefinitions().isEmpty()) {
-            log.warn("Generated swagger has no definitions");
-            return;
-        }
-        postprocessor.accept(target);
+    	
+		if (target.getComponents() == null || target.getComponents().getSchemas() == null
+				|| target.getComponents().getSchemas().isEmpty()) {
+			log.warn("Generated swagger has no definitions");
+			return;
+		}
+		postprocessor.accept(target);
     }
 
     private class ModuleGenerator {
@@ -353,7 +365,7 @@ public class OpenAPIGenerator {
 
                 handler.path(cN, pathCtx);
                 cN.getChildNodes().forEach(n -> generate(n, depth-1));
-                dataObjectsBuilder.addModel(cN);
+                dataObjectsBuilder.addSchema(cN);
 
                 pathCtx = pathCtx.drop();
             } else if(node instanceof ListSchemaNode) {
@@ -368,7 +380,7 @@ public class OpenAPIGenerator {
 
                 handler.path(lN, pathCtx);
                 lN.getChildNodes().forEach(n -> generate(n, depth-1));
-                dataObjectsBuilder.addModel(lN);
+                dataObjectsBuilder.addSchema(lN);
 
                 pathCtx = pathCtx.drop();
             } else if (node instanceof ChoiceSchemaNode) {

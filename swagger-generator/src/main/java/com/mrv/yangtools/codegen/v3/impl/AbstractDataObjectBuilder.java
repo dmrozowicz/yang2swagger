@@ -9,7 +9,7 @@
  *      Bartosz Michalik <bartosz.michalik@amartus.com>
  */
 
-package com.mrv.yangtools.codegen.v3;
+package com.mrv.yangtools.codegen.v3.impl;
 
 import static com.mrv.yangtools.common.BindingMapping.getClassName;
 import static com.mrv.yangtools.common.BindingMapping.nameToPackageSegment;
@@ -47,13 +47,8 @@ import org.slf4j.LoggerFactory;
 
 import com.mrv.yangtools.codegen.impl.DataNodeHelper;
 import com.mrv.yangtools.codegen.impl.ModuleUtils;
+import com.mrv.yangtools.codegen.v3.DataObjectBuilder;
 
-import io.swagger.models.Model;
-import io.swagger.models.ModelImpl;
-import io.swagger.models.properties.AbstractProperty;
-import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.ObjectProperty;
-import io.swagger.models.properties.Property;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Schema;
@@ -319,10 +314,10 @@ public abstract class AbstractDataObjectBuilder implements DataObjectBuilder {
      * @param <T> type of the node
      */
     @Override
-    public <T extends SchemaNode & DataNodeContainer> void addModel(T node, String tagName) {
+    public <T extends SchemaNode & DataNodeContainer> void addSchema(T node, String tagName) {
 
 
-        Schema<String> schema = build(node);
+        Schema<?> schema = build(node);
 
         String modelName = getName(node);
 
@@ -346,12 +341,12 @@ public abstract class AbstractDataObjectBuilder implements DataObjectBuilder {
     }
 
     @Override
-    public <T extends SchemaNode & DataNodeContainer> void addModel(T node) {
-        addModel(node, null);
+    public <T extends SchemaNode & DataNodeContainer> void addSchema(T node) {
+        addSchema(node, null);
     }
 
     @Override
-    public String addModel(EnumTypeDefinition enumType) {
+    public String addSchema(EnumTypeDefinition enumType) {
         QName qName = enumType.getQName();
         
         //inline enumerations are a special case that needs extra enumeration
@@ -377,7 +372,6 @@ public abstract class AbstractDataObjectBuilder implements DataObjectBuilder {
         schema.setEnum(enumType.getValues().stream()
                 .map(EnumTypeDefinition.EnumPair::getName).collect(Collectors.toList()));
         schema.setType("string");
-        schema.$ref(getName(qName));
         return schema;
     }
 

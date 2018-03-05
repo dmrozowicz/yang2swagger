@@ -9,7 +9,7 @@
  *      Bartosz Michalik <bartosz.michalik@amartus.com>
  */
 
-package com.mrv.yangtools.codegen.v3;
+package com.mrv.yangtools.codegen.v3.impl;
 
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.opendaylight.yangtools.yang.model.api.SchemaNode;
@@ -19,6 +19,8 @@ import org.opendaylight.yangtools.yang.model.util.SchemaContextUtil;
 import org.opendaylight.yangtools.yang.model.util.type.BaseTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.mrv.yangtools.codegen.v3.DataObjectBuilder;
 
 import io.swagger.v3.oas.models.media.BooleanSchema;
 import io.swagger.v3.oas.models.media.IntegerSchema;
@@ -72,7 +74,7 @@ public class TypeConverter {
         EnumTypeDefinition e = toEnum(type);
         if(e != null) {
             if(enumToModel()) {
-                String refString = dataObjectBuilder.addModel(e);
+                String refString = dataObjectBuilder.addSchema(e);
                 Schema<String> refSchema = new Schema<>();
                 refSchema.$ref(refString);
                 return refSchema;

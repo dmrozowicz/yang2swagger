@@ -18,11 +18,11 @@ import org.opendaylight.yangtools.yang.model.api.type.EnumTypeDefinition;
 
 import com.mrv.yangtools.codegen.DataObjectRepo;
 
-import io.swagger.models.Swagger;
+import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
 
 /**
- * API for handling YANG data types to Swagger models
+ * API for handling YANG data types to Open API schema components
  * @author cmurch@mrv.com
  * @author bartosz.michalik@amartus.com
  */
@@ -33,7 +33,7 @@ public interface DataObjectBuilder extends DataObjectRepo {
      * @param <T> composed type
      * @return model for node
      */
-    <T extends SchemaNode & DataNodeContainer> Schema<String> build(T node);
+    <T extends SchemaNode & DataNodeContainer> Schema<?> build(T node);
 
     /**
      * Pre-process module
@@ -42,19 +42,19 @@ public interface DataObjectBuilder extends DataObjectRepo {
     void processModule(Module module);
 
     /**
-     * Typically to build model and store it internally (i.e. in {@link Swagger} models definition
-     * @param node to build model for and add to swagger definitions
+     * Typically to build schema and store it internally (i.e. in {@link OpenAPI} schema components
+     * @param node to build schema for and add to OpenAPI schema components
      * @param <T> type
      */
-    <T extends SchemaNode & DataNodeContainer> void addModel(T node);
+    <T extends SchemaNode & DataNodeContainer> void addSchema(T node);
 
     /**
-     * Add model for enum
-     * @param enumType enum to build swagger model from
+     * Add schema for enum
+     * @param enumType enum to build OpeanAPI schema from
      * @return definition id like in {@link DataObjectRepo#getDefinitionId(SchemaNode)}
      */
-    String addModel(EnumTypeDefinition enumType);
+    String addSchema(EnumTypeDefinition enumType);
 
 
-    <T extends SchemaNode & DataNodeContainer> void addModel(T input, String parentTag);
+    <T extends SchemaNode & DataNodeContainer> void addSchema(T input, String parentTag);
 }

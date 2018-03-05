@@ -9,36 +9,36 @@
  *      Bartosz Michalik <bartosz.michalik@amartus.com>
  */
 
-package com.mrv.yangtools.example;
+package com.mrv.yangtools.example.v3;
 
-import com.mrv.yangtools.codegen.SwaggerGenerator;
-import com.mrv.yangtools.codegen.impl.SegmentTagGenerator;
-import com.mrv.yangtools.codegen.impl.postprocessor.SingleParentInheritenceModel;
+import java.io.File;
+import java.io.FileWriter;
 
-import java.io.*;
+import com.mrv.yangtools.codegen.v3.OpenAPIGenerator;
+import com.mrv.yangtools.codegen.v3.impl.SegmentTagGenerator;
 
 /**
  * Simple example of swagger generation for TAPI modules
  * @author cmurch@mrv.com
  * @author bartosz.michalik@amartus.com
  */
-public class YamlGenerator {
+public class YamlGeneratorV3 {
 
     public static void main(String[] args) throws Exception {
-        SwaggerGenerator generator;
+        OpenAPIGenerator generator;
         if(args.length == 1) {
-            generator = GeneratorHelper.getGenerator(new File(args[0]),m -> true);
+            generator = GeneratorHelperV3.getGenerator(new File(args[0]),m -> true);
         } else {
-            generator = GeneratorHelper.getGenerator(m -> m.getName().startsWith("Tapi"));
+            generator = GeneratorHelperV3.getGenerator(m -> m.getName().startsWith("Tapi"));
         }
 
         generator
                 .tagGenerator(new SegmentTagGenerator())
-                .elements(SwaggerGenerator.Elements.RCP)
-                .appendPostProcessor(new SingleParentInheritenceModel());
+                .elements(OpenAPIGenerator.Elements.RCP);
+             //  .appendPostProcessor(new SingleParentInheritenceModel());
 
 
-        generator.generate(new FileWriter("swagger_unpacking.yaml"));
+        generator.generate(new FileWriter("openAPI.yaml"));
 //        generator.generate(new OutputStreamWriter(System.out));
 
     }
